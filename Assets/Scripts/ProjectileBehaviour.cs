@@ -45,7 +45,7 @@ public class ProjectileBehaviour : MonoBehaviour
         }
     }
 
-    void DestroyGameObject() 
+    public void DestroyGameObject() 
     {
         Destroy(gameObject);
     }
