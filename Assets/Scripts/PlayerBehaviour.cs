@@ -11,7 +11,7 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] float hpMax;
     [SerializeField] Text hpDisplay;
     [SerializeField] Image hpBarDisplay;
-    [SerializeField] bool isInvuln;
+    public bool isInvuln;
 
     [Header("Movement variables")]
     [SerializeField] public bool controllable;
@@ -31,12 +31,15 @@ public class PlayerBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //Make controllable and vulnerable
         controllable = true;
         isInvuln = false;
 
+        //Set hp and update UI
         hp = hpMax;
         UpdateHealthUI();
 
+        //Set charge attack timer to max
         chargeTimer = chargeTimerMax;
     }
 
@@ -130,7 +133,7 @@ public class PlayerBehaviour : MonoBehaviour
                 Hurt(projScript.dmgValue);
 
                 //Destroy enemy projectile
-                projScript.DestroyGameObject();
+                Destroy(col.gameObject);
             } 
             //If collided with enemy
             else if(col.gameObject.tag == "Enemy")

@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class ProjectileBehaviour : MonoBehaviour
 {
-    
     public float dmgValue;
 
     public float HSpeed;
     public float VSpeed;
+    [SerializeField] float destroyTimer = 100;
 
     // Start is called before the first frame update
     void Start()
@@ -20,14 +20,15 @@ public class ProjectileBehaviour : MonoBehaviour
     void Update()
     {
         transform.Translate(HSpeed/20, VSpeed/20, 0);
+
+        destroyTimer -= Time.deltaTime;
+        if(destroyTimer <= 0)
+        {
+            Destroy(gameObject);
+        }
     }
 
     void OnBecameInvisible()
-    {
-        DestroyGameObject();
-    }
-
-    public void DestroyGameObject() 
     {
         Destroy(gameObject);
     }

@@ -35,7 +35,18 @@ public class EnemyStats : MonoBehaviour
             hpDisplay.text = hp + "/" + hpMax;
 
             //Destroy projectile
-            projScript.DestroyGameObject();
+            Destroy(col.gameObject);
+        } 
+        else if (col.gameObject.tag == "Player")
+        {
+            if (col.gameObject.GetComponent<PlayerBehaviour>().isInvuln)
+            {
+                hp -= 10;
+            }
+            else
+            {
+                hp -= 3;
+            }
         }
         //Checks if enemy hp is below 0 (defeated)
         if (hp <= 0)
