@@ -7,6 +7,9 @@ TagManager:
   - PlayerAttack
   - EnemyAttack
   - Enemy
+  - HealingItem
+  - 1UP
+  - PointStar
   layers:
   - Default
   - TransparentFX

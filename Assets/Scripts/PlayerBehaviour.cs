@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class PlayerBehaviour : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] float hp;
     [SerializeField] float hpMax;
     [SerializeField] Text hpDisplay;
+    [SerializeField] bool isInvuln;
 
     [Header("Movement variables")]
     [SerializeField] public bool controllable;
@@ -30,6 +32,9 @@ public class PlayerBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        controllable = true;
+        isInvuln = false;
+
         hp = hpMax;
         hpDisplay.text = hp + "/" + hpMax;
         chargeTimer = chargeTimerMax;
@@ -135,25 +140,78 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D col)
     {
-        //Checks if collided object is attack from enemy
-        if (col.gameObject.tag == "EnemyAttack")
+
+        if(col.gameObject.tag == "HealingItem")
         {
-            //Damage player with dmg value taken from collided object script
-            ProjectileBehaviour projScript = col.gameObject.GetComponent<ProjectileBehaviour>();
-            hp -= projScript.dmgValue;
+            Heal(col.gameObject.GetComponent<HealingItemStats>().healValue);
+            Destroy(col.gameObject);
+        } 
+        else if (col.gameObject.tag == "1UP")
+        {
 
-            //Update UI
-            hpDisplay.text = hp + "/" + hpMax;
+        } 
+        else if (col.gameObject.tag == "PointStar")
+        {
 
-            //Destroy enemy projectile
-            projScript.DestroyGameObject();
+        }
 
+
+        if (isInvuln == false)
+        {
+            //If collided with enemy attack
+            if (col.gameObject.tag == "EnemyAttack")
+            {
+                //Call Hurt() to damage player with dmg value taken from collided object script
+                ProjectileBehaviour projScript = col.gameObject.GetComponent<ProjectileBehaviour>();
+                Hurt(projScript.dmgValue);
+
+                //Destroy enemy projectile
+                projScript.DestroyGameObject();
+            } 
+            //If collided with enemy
+            else if(col.gameObject.tag == "Enemy")
+            {
+                Hurt(5);
+            }
+        }
+
+    }
+
+    private void Hurt(float dmgValue)
+    {
+        //Damage player
+        hp -= dmgValue;
+
+        //Update UI
+        hpDisplay.text = hp + "/" + hpMax;
+
+        //If player hp is above 0 (still alive)
+        if(hp > 0)
+        {
             controllable = false;
+            transform.DOMoveX(transform.position.x - 1.5f, 0.2f).OnComplete(() =>{
+                controllable = true;
+            });
         }
-        //Checks if enemy hp is below 0 (defeated)
-        if (hp <= 0)
+        //Checks if player hp is below 0 (defeated)
+        else if (hp <= 0)
         {
 
         }
+    }
+
+    private void Heal(float healValue)
+    {
+        //Heal player
+        hp += healValue;
+
+        //Bring hp back to hpMax in case of overflow
+        if (hp > hpMax)
+        {
+            hp = hpMax;
+        }
+
+        //Update UI
+        hpDisplay.text = hp + "/" + hpMax;
     }
 }
