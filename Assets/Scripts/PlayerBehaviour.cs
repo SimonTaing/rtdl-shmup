@@ -10,6 +10,7 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] float hp;
     [SerializeField] float hpMax;
     [SerializeField] Text hpDisplay;
+    [SerializeField] Image hpBarDisplay;
     [SerializeField] bool isInvuln;
 
     [Header("Movement variables")]
@@ -26,8 +27,6 @@ public class PlayerBehaviour : MonoBehaviour
 
     [SerializeField] float chargeTimer;
     [SerializeField] float chargeTimerMax;
-    [SerializeField] float shootTimer;
-    [SerializeField] float shootTimerMax;
 
     // Start is called before the first frame update
     void Start()
@@ -36,7 +35,8 @@ public class PlayerBehaviour : MonoBehaviour
         isInvuln = false;
 
         hp = hpMax;
-        hpDisplay.text = hp + "/" + hpMax;
+        UpdateHealthUI();
+
         chargeTimer = chargeTimerMax;
     }
 
@@ -55,7 +55,7 @@ public class PlayerBehaviour : MonoBehaviour
             //Always shoot 1 small projectile on KeyDown 
             if (Input.GetKeyDown("space"))
             {
-                ShootSmall();
+                SpawnProjectile(projectileSmall, 1.5f, 0f);
             }
 
             //Decrease chrage timer when shoot button is held down
@@ -75,13 +75,18 @@ public class PlayerBehaviour : MonoBehaviour
                 //Mid charge
                 if (chargeTimer > 0 && chargeTimer < (chargeTimerMax / 2))
                 {
-                    ShootMidCharge();
+                    SpawnProjectile(projectileMedium, 1.5f, 0f);
                 }
 
                 //Full charge
                 if (chargeTimer < 0)
                 {
-                    ShootFullCharge();
+                    SpawnProjectile(projectileLarge, 1.5f, 0f);
+                    SpawnProjectile(projectileMedium, 1f, 0.5f);
+                    SpawnProjectile(projectileMedium, 1f, -0.5f);
+                    SpawnProjectile(projectileSmall, -1.5f, 0f);
+                    SpawnProjectile(projectileSmall, -1.25f, 0.5f);
+                    SpawnProjectile(projectileSmall, -1.25f, -0.5f);
                 }
                 //Reset timer
                 chargeTimer = chargeTimerMax;
@@ -89,53 +94,12 @@ public class PlayerBehaviour : MonoBehaviour
         }
     }
 
-    private void ShootSmall()
+    private void SpawnProjectile(GameObject projectype, float hSpeed, float vSpeed) 
     {
         GameObject projectile;
-        projectile = Instantiate(projectileSmall, transform.position, transform.rotation);
-        projectile.GetComponent<ProjectileBehaviour>().HSpeed = 1.5f;
-        projectile.GetComponent<ProjectileBehaviour>().VSpeed = 0f;
-    }
-
-    private void ShootMidCharge()
-    {
-        GameObject projectile;
-        projectile = Instantiate(projectileMedium, transform.position, transform.rotation);
-        projectile.GetComponent<ProjectileBehaviour>().HSpeed = 1.5f;
-        projectile.GetComponent<ProjectileBehaviour>().VSpeed = 0f;
-    }
-
-    private void ShootFullCharge()
-    {
-        GameObject projectile1;
-        projectile1 = Instantiate(projectileLarge, transform.position, transform.rotation);
-        projectile1.GetComponent<ProjectileBehaviour>().HSpeed = 1.5f;
-        projectile1.GetComponent<ProjectileBehaviour>().VSpeed = 0f;
-
-        GameObject projectile2;
-        projectile2 = Instantiate(projectileMedium, transform.position, transform.rotation);
-        projectile2.GetComponent<ProjectileBehaviour>().HSpeed = 1f;
-        projectile2.GetComponent<ProjectileBehaviour>().VSpeed = 0.5f;
-
-        GameObject projectile3;
-        projectile3 = Instantiate(projectileMedium, transform.position, transform.rotation);
-        projectile3.GetComponent<ProjectileBehaviour>().HSpeed = 1f;
-        projectile3.GetComponent<ProjectileBehaviour>().VSpeed = -0.5f;
-
-        GameObject projectile4;
-        projectile4 = Instantiate(projectileSmall, transform.position, transform.rotation);
-        projectile4.GetComponent<ProjectileBehaviour>().HSpeed = -1.5f;
-        projectile4.GetComponent<ProjectileBehaviour>().VSpeed = 0f;
-
-        GameObject projectile5;
-        projectile5 = Instantiate(projectileSmall, transform.position, transform.rotation);
-        projectile5.GetComponent<ProjectileBehaviour>().HSpeed = -1f;
-        projectile5.GetComponent<ProjectileBehaviour>().VSpeed = 0.5f;
-
-        GameObject projectile6;
-        projectile6 = Instantiate(projectileSmall, transform.position, transform.rotation);
-        projectile6.GetComponent<ProjectileBehaviour>().HSpeed = -1f;
-        projectile6.GetComponent<ProjectileBehaviour>().VSpeed = -0.5f;
+        projectile = Instantiate(projectype, transform.position, transform.rotation);
+        projectile.GetComponent<ProjectileBehaviour>().HSpeed = hSpeed;
+        projectile.GetComponent<ProjectileBehaviour>().VSpeed = vSpeed;
     }
 
     private void OnCollisionEnter2D(Collision2D col)
@@ -177,13 +141,35 @@ public class PlayerBehaviour : MonoBehaviour
 
     }
 
+    private void UpdateHealthUI()
+    {
+        //Update UI
+        hpDisplay.text = hp + "/" + hpMax;
+        hpBarDisplay.DOFillAmount(hp / hpMax, 0.1f);
+
+        //If hp is over 1/2.5
+        if(hp > hpMax / 2.5)
+        {
+            //Change to blue
+            Color blue = new Color(0.3716981f, 0.9606702f, 1, 1);
+            hpBarDisplay.DOColor(blue, 0.1f);
+        } 
+        //If hp is below 1/2.5
+        else if (hp < hpMax / 2.5) 
+        {
+            //Change to red
+            Color red = new Color(1, 0.07924521f, 0.1927032f, 1);
+            hpBarDisplay.DOColor(red, 0.1f);
+        }
+    }
+
     private void Hurt(float dmgValue)
     {
         //Damage player
         hp -= dmgValue;
 
         //Update UI
-        hpDisplay.text = hp + "/" + hpMax;
+        UpdateHealthUI();
 
         //If player hp is above 0 (still alive)
         if(hp > 0)
@@ -212,6 +198,6 @@ public class PlayerBehaviour : MonoBehaviour
         }
 
         //Update UI
-        hpDisplay.text = hp + "/" + hpMax;
+        UpdateHealthUI();
     }
 }
