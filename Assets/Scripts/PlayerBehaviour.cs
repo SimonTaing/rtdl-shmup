@@ -10,7 +10,8 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] float hp;
     [SerializeField] float hpMax;
     [SerializeField] Text hpDisplay;
-    [SerializeField] Image hpBarDisplay;
+    [SerializeField] Image hpBarMid;
+    [SerializeField] Image hpBarFront;
     public bool isInvuln;
 
     [Header("Movement variables")]
@@ -37,7 +38,8 @@ public class PlayerBehaviour : MonoBehaviour
 
         //Set hp and update UI
         hp = hpMax;
-        UpdateHealthUI();
+        hpBarFront.fillAmount = hp / hpMax;
+        hpBarMid.fillAmount = hp / hpMax;
 
         //Set charge attack timer to max
         chargeTimer = chargeTimerMax;
@@ -58,7 +60,7 @@ public class PlayerBehaviour : MonoBehaviour
             //Always shoot 1 small projectile on KeyDown 
             if (Input.GetKeyDown("space"))
             {
-                SpawnProjectile(projectileSmall, 1.5f, 0f);
+                SpawnProjectile(projectileSmall, 1.5f, 0f, 3);
             }
 
             //Decrease chrage timer when shoot button is held down
@@ -78,18 +80,18 @@ public class PlayerBehaviour : MonoBehaviour
                 //Mid charge
                 if (chargeTimer > 0 && chargeTimer < (chargeTimerMax / 2))
                 {
-                    SpawnProjectile(projectileMedium, 1.5f, 0f);
+                    SpawnProjectile(projectileMedium, 1.5f, 0f, 16);
                 }
 
                 //Full charge
                 if (chargeTimer < 0)
                 {
-                    SpawnProjectile(projectileLarge, 1.5f, 0f);
-                    SpawnProjectile(projectileMedium, 1f, 0.5f);
-                    SpawnProjectile(projectileMedium, 1f, -0.5f);
-                    SpawnProjectile(projectileSmall, -1.5f, 0f);
-                    SpawnProjectile(projectileSmall, -1.25f, 0.5f);
-                    SpawnProjectile(projectileSmall, -1.25f, -0.5f);
+                    SpawnProjectile(projectileLarge, 1.5f, 0f, 32);
+                    SpawnProjectile(projectileMedium, 1f, 0.5f, 32);
+                    SpawnProjectile(projectileMedium, 1f, -0.5f, 32);
+                    SpawnProjectile(projectileSmall, -1.5f, 0f, 16);
+                    SpawnProjectile(projectileSmall, -1.25f, 0.5f, 16);
+                    SpawnProjectile(projectileSmall, -1.25f, -0.5f, 16);
                 }
                 //Reset timer
                 chargeTimer = chargeTimerMax;
@@ -97,12 +99,13 @@ public class PlayerBehaviour : MonoBehaviour
         }
     }
 
-    private void SpawnProjectile(GameObject projectype, float hSpeed, float vSpeed) 
+    private void SpawnProjectile(GameObject projectype, float hSpeed, float vSpeed, float dmgValue) 
     {
         GameObject projectile;
         projectile = Instantiate(projectype, transform.position, transform.rotation);
         projectile.GetComponent<ProjectileBehaviour>().HSpeed = hSpeed;
         projectile.GetComponent<ProjectileBehaviour>().VSpeed = vSpeed;
+        projectile.GetComponent<ProjectileBehaviour>().dmgValue = dmgValue;
     }
 
     private void OnCollisionEnter2D(Collision2D col)
@@ -144,25 +147,35 @@ public class PlayerBehaviour : MonoBehaviour
 
     }
 
-    private void UpdateHealthUI()
+    private void UpdateHealthUI(string changeType)
     {
         //Update UI
         hpDisplay.text = hp + "/" + hpMax;
-        hpBarDisplay.DOFillAmount(hp / hpMax, 0.1f);
+
+        if(changeType == "Hurt")
+        {
+            hpBarFront.fillAmount = hp / hpMax;
+            hpBarMid.DOFillAmount(hp / hpMax, 0.5f);
+        } 
+        else if (changeType == "Heal")
+        {
+            hpBarMid.fillAmount = hp / hpMax;
+            hpBarFront.DOFillAmount(hp / hpMax, 0.5f);
+        }
 
         //If hp is over 1/2.5
         if(hp > hpMax / 2.5)
         {
             //Change to blue
             Color blue = new Color(0.3716981f, 0.9606702f, 1, 1);
-            hpBarDisplay.DOColor(blue, 0.1f);
+            hpBarFront.DOColor(blue, 0.1f);
         } 
         //If hp is below 1/2.5
         else if (hp < hpMax / 2.5) 
         {
             //Change to red
             Color red = new Color(1, 0.07924521f, 0.1927032f, 1);
-            hpBarDisplay.DOColor(red, 0.1f);
+            hpBarFront.DOColor(red, 0.1f);
         }
     }
 
@@ -172,7 +185,7 @@ public class PlayerBehaviour : MonoBehaviour
         hp -= dmgValue;
 
         //Update UI
-        UpdateHealthUI();
+        UpdateHealthUI("Hurt");
 
         //If player hp is above 0 (still alive)
         if(hp > 0)
@@ -201,6 +214,6 @@ public class PlayerBehaviour : MonoBehaviour
         }
 
         //Update UI
-        UpdateHealthUI();
+        UpdateHealthUI("Heal");
     }
 }

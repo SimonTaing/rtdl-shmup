@@ -5,7 +5,6 @@ using UnityEngine;
 public class ProjectileBehaviour : MonoBehaviour
 {
     public float dmgValue;
-
     public float HSpeed;
     public float VSpeed;
     [SerializeField] float destroyTimer = 100;
