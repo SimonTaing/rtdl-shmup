@@ -10,9 +10,11 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] float hp;
     [SerializeField] float hpMax;
     [SerializeField] Text hpDisplay;
-    [SerializeField] Image hpBarMid;
-    [SerializeField] Image hpBarFront;
+    [SerializeField] UiHpBar uiHpBar;
     public bool isInvuln;
+    [SerializeField] float invulnTimer;
+    [SerializeField] float invulnTimerMax;
+    [SerializeField] float knockbackMultiplier;
 
     [Header("Movement variables")]
     [SerializeField] public bool controllable;
@@ -38,8 +40,8 @@ public class PlayerBehaviour : MonoBehaviour
 
         //Set hp and update UI
         hp = hpMax;
-        hpBarFront.fillAmount = hp / hpMax;
-        hpBarMid.fillAmount = hp / hpMax;
+        uiHpBar.hpBarFront.fillAmount = hp / hpMax;
+        uiHpBar.hpBarMid.fillAmount = hp / hpMax;
 
         //Set charge attack timer to max
         chargeTimer = chargeTimerMax;
@@ -48,6 +50,16 @@ public class PlayerBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (isInvuln)
+        {
+            invulnTimer -= Time.deltaTime;
+
+            if(invulnTimer <= 0)
+            {
+                isInvuln = false;
+            }
+        }
+
         //Check if character should recieve inputs
         if (controllable)
         {
@@ -147,52 +159,26 @@ public class PlayerBehaviour : MonoBehaviour
 
     }
 
-    private void UpdateHealthUI(string changeType)
-    {
-        //Update UI
-        hpDisplay.text = hp + "/" + hpMax;
-
-        if(changeType == "Hurt")
-        {
-            hpBarFront.fillAmount = hp / hpMax;
-            hpBarMid.DOFillAmount(hp / hpMax, 0.5f);
-        } 
-        else if (changeType == "Heal")
-        {
-            hpBarMid.fillAmount = hp / hpMax;
-            hpBarFront.DOFillAmount(hp / hpMax, 0.5f);
-        }
-
-        //If hp is over 1/2.5
-        if(hp > hpMax / 2.5)
-        {
-            //Change to blue
-            Color blue = new Color(0.3716981f, 0.9606702f, 1, 1);
-            hpBarFront.DOColor(blue, 0.1f);
-        } 
-        //If hp is below 1/2.5
-        else if (hp < hpMax / 2.5) 
-        {
-            //Change to red
-            Color red = new Color(1, 0.07924521f, 0.1927032f, 1);
-            hpBarFront.DOColor(red, 0.1f);
-        }
-    }
-
     private void Hurt(float dmgValue)
     {
         //Damage player
         hp -= dmgValue;
 
         //Update UI
-        UpdateHealthUI("Hurt");
+        uiHpBar.UpdateHealthUI("Hurt", hp, hpMax);
 
         //If player hp is above 0 (still alive)
         if(hp > 0)
         {
             controllable = false;
-            transform.DOMoveX(transform.position.x - 1.5f, 0.2f).OnComplete(() =>{
+            Vector3 newPos = new Vector3(
+                (transform.position.x - translationH) * knockbackMultiplier, 
+                (transform.position.y - translationV) * knockbackMultiplier, 
+                transform.position.z);
+            transform.DOMove(newPos, 0.2f).OnComplete(() =>{
                 controllable = true;
+                isInvuln = true;
+                invulnTimer = invulnTimerMax;
             });
         }
         //Checks if player hp is below 0 (defeated)
@@ -214,6 +200,6 @@ public class PlayerBehaviour : MonoBehaviour
         }
 
         //Update UI
-        UpdateHealthUI("Heal");
+        uiHpBar.UpdateHealthUI("Heal", hp, hpMax);
     }
 }
